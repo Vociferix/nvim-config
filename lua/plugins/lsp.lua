@@ -16,15 +16,26 @@ return {
     dependencies = { "williamboman/mason.nvim" },
     opts = {
       ensure_installed = {
-        "rust_analyzer",  -- Rust
+        "rust_analyzer",  -- Rust (also managed by rustaceanvim)
         "clangd",         -- C/C++
         "pyright",        -- Python (type-aware)
-        "ruff_lsp",       -- Python (fast linting / formatting)
+        "ruff",           -- Python (fast linting / formatting)
         "lua_ls",         -- Lua (for editing this config!)
         "cmake",          -- CMake
         "taplo",          -- TOML
       },
       automatic_installation = true,
+    },
+  },
+
+  -- ── lazydev (Neovim API completions in Lua files) ─────────
+  {
+    "folke/lazydev.nvim",
+    ft   = "lua",
+    opts = {
+      library = {
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
+      },
     },
   },
 
@@ -36,35 +47,37 @@ return {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
-      { "folke/neodev.nvim", opts = {} },   -- Neovim API completions in lua files
+      "folke/lazydev.nvim",
     },
     config = function()
-      -- Shared on_attach: runs for every LSP server
-      local on_attach = function(_, bufnr)
-        local map = vim.keymap.set
-        local buf = { noremap = true, silent = true, buffer = bufnr }
+      -- Keymaps applied whenever any LSP attaches
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(ev)
+          local bufnr = ev.buf
+          local map   = vim.keymap.set
+          local buf   = { noremap = true, silent = true, buffer = bufnr }
 
-        -- Navigation
-        map("n", "gd",         vim.lsp.buf.definition,       vim.tbl_extend("force", buf, { desc = "Go to definition" }))
-        map("n", "gD",         vim.lsp.buf.declaration,      vim.tbl_extend("force", buf, { desc = "Go to declaration" }))
-        map("n", "gi",         vim.lsp.buf.implementation,   vim.tbl_extend("force", buf, { desc = "Go to implementation" }))
-        map("n", "gr",         vim.lsp.buf.references,       vim.tbl_extend("force", buf, { desc = "References" }))
-        map("n", "gt",         vim.lsp.buf.type_definition,  vim.tbl_extend("force", buf, { desc = "Type definition" }))
-        -- Info
-        map("n", "K",          vim.lsp.buf.hover,            vim.tbl_extend("force", buf, { desc = "Hover docs" }))
-        map("n", "<C-k>",      vim.lsp.buf.signature_help,   vim.tbl_extend("force", buf, { desc = "Signature help" }))
-        -- Actions
-        map("n", "<leader>lr", vim.lsp.buf.rename,           vim.tbl_extend("force", buf, { desc = "Rename symbol" }))
-        map({ "n", "v" }, "<leader>la", vim.lsp.buf.code_action, vim.tbl_extend("force", buf, { desc = "Code action" }))
-        map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end,
-                                                              vim.tbl_extend("force", buf, { desc = "Format file" }))
-        -- Workspace
-        map("n", "<leader>lwa", vim.lsp.buf.add_workspace_folder,    vim.tbl_extend("force", buf, { desc = "Add workspace folder" }))
-        map("n", "<leader>lwr", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", buf, { desc = "Remove workspace folder" }))
-      end
+          map("n", "gd",  vim.lsp.buf.definition,      vim.tbl_extend("force", buf, { desc = "Go to definition" }))
+          map("n", "gD",  vim.lsp.buf.declaration,     vim.tbl_extend("force", buf, { desc = "Go to declaration" }))
+          map("n", "gi",  vim.lsp.buf.implementation,  vim.tbl_extend("force", buf, { desc = "Go to implementation" }))
+          map("n", "gr",  vim.lsp.buf.references,      vim.tbl_extend("force", buf, { desc = "References" }))
+          map("n", "gt",  vim.lsp.buf.type_definition, vim.tbl_extend("force", buf, { desc = "Type definition" }))
+          map("n", "K",   vim.lsp.buf.hover,           vim.tbl_extend("force", buf, { desc = "Hover docs" }))
+          map("n", "<C-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", buf, { desc = "Signature help" }))
+          map("n", "<leader>lr", function() return ":IncRename " .. vim.fn.expand("<cword>") end,
+                                              vim.tbl_extend("force", buf, { expr = true, desc = "Rename (live)" }))
+          map({ "n", "v" }, "<leader>la", vim.lsp.buf.code_action, vim.tbl_extend("force", buf, { desc = "Code action" }))
+          map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end,
+                                                        vim.tbl_extend("force", buf, { desc = "Format file" }))
+          map("n", "<leader>lwa", vim.lsp.buf.add_workspace_folder,    vim.tbl_extend("force", buf, { desc = "Add workspace folder" }))
+          map("n", "<leader>lwr", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", buf, { desc = "Remove workspace folder" }))
+        end,
+      })
 
-      -- Capabilities with nvim-cmp completions
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      -- Global capabilities (applied to every server)
+      vim.lsp.config("*", {
+        capabilities = require("cmp_nvim_lsp").default_capabilities(),
+      })
 
       -- Diagnostic appearance
       vim.diagnostic.config({
@@ -83,16 +96,8 @@ return {
         },
       })
 
-      local lspconfig = require("lspconfig")
-
-      -- ── Rust ─────────────────────────────────────────────
-      -- NOTE: rust-tools / rustaceanvim is configured in plugins/rust.lua
-      -- rust_analyzer is managed there, NOT here.
-
       -- ── C / C++ ──────────────────────────────────────────
-      lspconfig.clangd.setup({
-        on_attach    = on_attach,
-        capabilities = capabilities,
+      vim.lsp.config("clangd", {
         cmd = {
           "clangd",
           "--background-index",
@@ -110,44 +115,32 @@ return {
       })
 
       -- ── Python ───────────────────────────────────────────
-      lspconfig.pyright.setup({
-        on_attach    = on_attach,
-        capabilities = capabilities,
+      vim.lsp.config("pyright", {
         settings = {
           python = {
             analysis = {
-              typeCheckingMode   = "basic",
-              autoSearchPaths    = true,
+              typeCheckingMode       = "basic",
+              autoSearchPaths        = true,
               useLibraryCodeForTypes = true,
             },
           },
         },
       })
 
-      lspconfig.ruff_lsp.setup({
-        on_attach    = on_attach,
-        capabilities = capabilities,
-      })
-
       -- ── Lua ──────────────────────────────────────────────
-      lspconfig.lua_ls.setup({
-        on_attach    = on_attach,
-        capabilities = capabilities,
+      vim.lsp.config("lua_ls", {
         settings = {
           Lua = {
-            runtime     = { version = "LuaJIT" },
-            workspace   = { checkThirdParty = false },
-            telemetry   = { enable = false },
-            completion  = { callSnippet = "Replace" },
+            runtime    = { version = "LuaJIT" },
+            workspace  = { checkThirdParty = false },
+            telemetry  = { enable = false },
+            completion = { callSnippet = "Replace" },
           },
         },
       })
 
-      -- ── TOML ─────────────────────────────────────────────
-      lspconfig.taplo.setup({ on_attach = on_attach, capabilities = capabilities })
-
-      -- ── CMake ────────────────────────────────────────────
-      lspconfig.cmake.setup({ on_attach = on_attach, capabilities = capabilities })
+      -- Enable all servers (ruff, taplo, cmake use lspconfig defaults)
+      vim.lsp.enable({ "clangd", "pyright", "ruff", "lua_ls", "taplo", "cmake" })
     end,
   },
 
@@ -158,10 +151,10 @@ return {
     dependencies = { "williamboman/mason.nvim", "nvimtools/none-ls.nvim" },
     opts = {
       ensure_installed = {
-        "black",      -- Python formatter
-        "isort",      -- Python import sorter
+        "black",        -- Python formatter
+        "isort",        -- Python import sorter
         "clang_format", -- C/C++ formatter
-        "stylua",     -- Lua formatter
+        "stylua",       -- Lua formatter
         "cmake_format",
       },
       automatic_installation = true,

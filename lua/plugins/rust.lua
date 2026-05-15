@@ -26,18 +26,8 @@ return {
             local map = vim.keymap.set
             local buf = { noremap = true, silent = true, buffer = bufnr }
 
-            -- Standard LSP keys (same as other servers)
-            map("n", "gd",         vim.lsp.buf.definition,       vim.tbl_extend("force", buf, { desc = "Go to definition" }))
-            map("n", "gD",         vim.lsp.buf.declaration,      vim.tbl_extend("force", buf, { desc = "Go to declaration" }))
-            map("n", "gi",         vim.lsp.buf.implementation,   vim.tbl_extend("force", buf, { desc = "Go to implementation" }))
-            map("n", "gr",         vim.lsp.buf.references,       vim.tbl_extend("force", buf, { desc = "References" }))
-            map("n", "K",          vim.lsp.buf.hover,            vim.tbl_extend("force", buf, { desc = "Hover docs" }))
-            map("n", "<C-k>",      vim.lsp.buf.signature_help,   vim.tbl_extend("force", buf, { desc = "Signature help" }))
-            map("n", "<leader>lr", vim.lsp.buf.rename,           vim.tbl_extend("force", buf, { desc = "Rename symbol" }))
-            map("n", "<leader>la", vim.lsp.buf.code_action,      vim.tbl_extend("force", buf, { desc = "Code action" }))
-            map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end,
-                                                                  vim.tbl_extend("force", buf, { desc = "Format (rustfmt)" }))
-
+            -- Standard LSP keys are set globally via the LspAttach autocmd in lsp.lua.
+            -- Only Rust-specific extras go here.
             -- Rust-specific extras
             map("n", "<leader>rr", function() vim.cmd.RustLsp("runnables") end,
                                                                   vim.tbl_extend("force", buf, { desc = "Rust: Runnables" }))
@@ -58,14 +48,12 @@ return {
           settings = {
             ["rust-analyzer"] = {
               cargo = {
-                allFeatures = true,
                 loadOutDirsFromCheck = true,
                 runBuildScripts = true,
               },
               checkOnSave = {
-                allFeatures  = true,
-                command      = "clippy",  -- use clippy instead of check
-                extraArgs    = { "--no-deps" },
+                command   = "clippy",  -- use clippy instead of check
+                extraArgs = { "--no-deps" },
               },
               procMacro = {
                 enable      = true,
@@ -88,7 +76,7 @@ return {
         },
 
         -- DAP config
-        dap = { adapter = require("rustaceanvim.config.server").get_codelldb_adapter(
+        dap = { adapter = require("rustaceanvim.config").get_codelldb_adapter(
           -- mason installs codelldb here:
           vim.fn.stdpath("data") .. "/mason/bin/codelldb",
           vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/lldb/lib/liblldb.so"
@@ -103,12 +91,11 @@ return {
     event        = "BufRead Cargo.toml",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
-      completion = { cmp = { enabled = true } },
       lsp = {
-        enabled         = true,
-        actions         = true,
-        completion      = true,
-        hover           = true,
+        enabled    = true,
+        actions    = true,
+        completion = true,
+        hover      = true,
       },
     },
     keys = {

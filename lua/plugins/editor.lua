@@ -101,10 +101,7 @@ return {
   -- ── inc-rename (live rename preview) ─────────────────────
   {
     "smjonas/inc-rename.nvim",
-    cmd = "IncRename",
-    keys = {
-      { "<leader>lr", function() return ":IncRename " .. vim.fn.expand("<cword>") end, expr = true, desc = "LSP: Rename (live)" },
-    },
+    cmd  = "IncRename",  -- keymap lives in lsp.lua's LspAttach
     opts = {},
   },
 

@@ -4,10 +4,13 @@
 
 local opt = vim.opt
 
+-- Silence upstream-plugin deprecation warnings until they catch up to nvim 0.12
+vim.deprecate = function() end
+
 -- ── Appearance ──────────────────────────────────────────────
 opt.termguicolors  = true         -- 24-bit colour
-opt.number         = true         -- absolute line numbers
-opt.relativenumber = true         -- + relative for easy jumps
+opt.number         = true
+opt.relativenumber = false
 opt.signcolumn     = "yes"        -- always show sign column (no jitter)
 opt.cursorline     = true         -- highlight current line
 opt.scrolloff      = 8            -- keep 8 lines above/below cursor
@@ -41,6 +44,7 @@ opt.timeoutlen     = 300          -- faster which-key popup
 -- ── Splits ──────────────────────────────────────────────────
 opt.splitright     = true
 opt.splitbelow     = true
+opt.laststatus     = 3    -- single global statusline across all splits
 
 -- ── Clipboard ───────────────────────────────────────────────
 opt.clipboard      = "unnamedplus"  -- sync with system clipboard
