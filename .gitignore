@@ -1,0 +1,6 @@
+# Neovim runtime data — don't commit these
+lazy-lock.json
+
+# If you WANT reproducible installs, remove lazy-lock.json from this file.
+# lazy-lock.json pins every plugin to an exact commit, which is great for
+# reproducibility but means you must run :Lazy update manually.
