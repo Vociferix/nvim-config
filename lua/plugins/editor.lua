@@ -120,10 +120,9 @@ return {
     "akinsho/toggleterm.nvim",
     version = "*",
     keys = {
-      { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",      desc = "Terminal (float)" },
-      { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Terminal (horizontal)" },
-      { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>",   desc = "Terminal (vertical)" },
-      { "<C-t>",      "<cmd>ToggleTerm<cr>",                      mode = { "n", "t" }, desc = "Toggle terminal" },
+      { "<A-1>", "<cmd>ToggleTerm direction=horizontal<cr>", mode = { "n", "t" }, desc = "Terminal (bottom)" },
+      { "<A-2>", "<cmd>ToggleTerm direction=vertical<cr>",   mode = { "n", "t" }, desc = "Terminal (side)" },
+      { "<A-3>", "<cmd>ToggleTerm direction=float<cr>",      mode = { "n", "t" }, desc = "Terminal (center)" },
     },
     opts = {
       size = function(term)

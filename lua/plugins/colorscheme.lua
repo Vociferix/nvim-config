@@ -1,33 +1,22 @@
 return {
   {
-    "navarasu/onedark.nvim",
+    "folke/tokyonight.nvim",
     priority = 1000,
     lazy     = false,
     opts = {
-      style           = "dark",
+      style           = "night",  -- darkest variant (#1a1b26 bg)
       transparent     = false,
-      term_colors     = true,
-      ending_tildes   = false,
-      code_style = {
-        comments  = "italic",
-        keywords  = "none",
-        functions = "none",
-        strings   = "none",
-        variables = "none",
-      },
-      integrations = {
-        cmp        = true,
-        gitsigns   = true,
-        nvimtree   = true,
-        telescope  = true,
-        treesitter = true,
-        which_key  = true,
-        indent_blankline = { enabled = true },
+      terminal_colors = true,
+      styles = {
+        comments  = { italic = true },
+        keywords  = { italic = false },
+        functions = {},
+        variables = {},
       },
     },
     config = function(_, opts)
-      require("onedark").setup(opts)
-      require("onedark").load()
+      require("tokyonight").setup(opts)
+      vim.cmd.colorscheme("tokyonight")
     end,
   },
 }
